@@ -31,3 +31,11 @@ export const createPost = (
     profit: calculateProfit(price1, price2)
   };
 };
+
+// 全投稿の累計お得額を計算
+export const getTotalProfit = (posts: Post[]): number =>
+  posts.reduce((sum, post) => sum + post.profit, 0);
+
+// 投稿を新しい順にソート
+export const sortByNewest = (posts: Post[]): Post[] =>
+  [...posts].sort((a, b) => b.created_at - a.created_at);
