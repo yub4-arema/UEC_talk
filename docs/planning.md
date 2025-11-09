@@ -98,3 +98,270 @@
 
 ### 5.2. パフォーマンス
 - ページ読み込み、タブ切り替え、統計計算などの各種操作に対し、ユーザーがストレスを感じない高速なレスポンスを維持すること。
+
+---
+
+## 6. 技術スタック
+
+### 6.1. フロントエンド
+- **フレームワーク**: Next.js (App Router)
+- **言語**: TypeScript
+- **スタイリング**: Tailwind CSS
+- **UIコンポーネント**: Radix UI
+
+### 6.2. バックエンド
+- **データベース**: Firebase Firestore
+- **ストレージ**: Firebase Storage（画像保存用）
+- **関数**: Firebase Cloud Functions
+- **認証**: 不要（匿名利用）
+
+---
+
+## 7. データベース設計
+
+### 7.1. Firestoreコレクション構造
+
+#### postsコレクション
+```
+posts/{postId}
+  - drink1Name: string       // ドリンク1の名前
+  - drink2Name: string       // ドリンク2の名前
+  - photoUrl: string | null  // 写真のURL
+  - profit: number          // お得度（円）
+  - createdAt: Timestamp    // 投稿日時
+```
+
+#### drinkMasterコレクション
+```
+drinkMaster/{drinkId}
+  - name: string    // ドリンク名
+  - price: number   // 通常価格（円）
+```
+
+### 7.2. インデックス
+- `posts`コレクション: `createdAt`（降順）でインデックス作成
+- `posts`コレクション: `profit`（降順）でインデックス作成
+
+---
+
+## 8. Firestore 関数仕様
+
+### 8.1. 概要
+本システムで使用するFirebase Cloud Functionsの仕様を定義する。これらの関数は、データの整合性を保ち、クライアント側の処理負荷を軽減し、セキュリティを確保する役割を担う。
+
+### 8.2. 共通仕様
+- **ランタイム**: Node.js 20
+- **リージョン**: asia-northeast1（東京）
+- **CORS**: 許可（本番環境では特定ドメインのみに制限）
+- **エラーハンドリング**: 適切なHTTPステータスコードとエラーメッセージを返却
+
+### 8.3. 関数一覧
+
+#### 8.3.1. createPost（投稿作成）
+**目的**: ガチャ結果の投稿を作成し、お得度を自動計算する
+
+**トリガー**: HTTPS呼び出し可能関数（Callable Function）
+
+**入力パラメータ**:
+```typescript
+{
+  drink1Name: string;  // ドリンク1の名前
+  drink2Name: string;  // ドリンク2の名前
+  photoUrl?: string;   // 写真のURL（オプション）
+}
+```
+
+**処理フロー**:
+1. 入力値のバリデーション
+   - `drink1Name`と`drink2Name`が空でないことを確認
+   - 文字列長が適切な範囲内であることを確認（最大50文字）
+2. `drinkMaster`コレクションから両ドリンクの価格を取得
+   - ドリンクが見つからない場合はエラーを返す
+3. お得度を計算: `profit = (drink1Price + drink2Price) - GACHA_PRICE`
+   - `GACHA_PRICE`は定数として定義（最安ドリンクの2倍の価格）
+4. `posts`コレクションに新規ドキュメントを作成
+   - `createdAt`はサーバータイムスタンプを使用
+5. 作成した投稿のIDと計算されたprofitを返却
+
+**戻り値**:
+```typescript
+{
+  postId: string;
+  profit: number;
+}
+```
+
+**エラーケース**:
+- `INVALID_ARGUMENT`: 必須パラメータが不足、または不正な値
+- `NOT_FOUND`: 指定されたドリンクがマスターに存在しない
+- `INTERNAL`: サーバー内部エラー
+
+#### 8.3.2. getPosts（投稿一覧取得）
+**目的**: 投稿のタイムラインを取得する
+
+**トリガー**: HTTPS呼び出し可能関数（Callable Function）
+
+**入力パラメータ**:
+```typescript
+{
+  limit?: number;      // 取得件数（デフォルト: 50、最大: 100）
+  startAfter?: string; // ページネーション用の開始位置（投稿ID）
+}
+```
+
+**処理フロー**:
+1. `limit`パラメータのバリデーション（1～100の範囲内）
+2. `posts`コレクションから`createdAt`降順でクエリ
+3. `startAfter`が指定されている場合、そのドキュメント以降を取得
+4. 投稿データの配列を返却
+
+**戻り値**:
+```typescript
+{
+  posts: Array<{
+    id: string;
+    drink1Name: string;
+    drink2Name: string;
+    photoUrl: string | null;
+    profit: number;
+    createdAt: Timestamp;
+  }>;
+  hasMore: boolean;  // さらに投稿があるかどうか
+}
+```
+
+**エラーケース**:
+- `INVALID_ARGUMENT`: limitが範囲外
+- `INTERNAL`: サーバー内部エラー
+
+#### 8.3.3. getStatistics（統計情報取得）
+**目的**: サイト全体の統計情報を取得する
+
+**トリガー**: HTTPS呼び出し可能関数（Callable Function）
+
+**入力パラメータ**: なし
+
+**処理フロー**:
+1. `posts`コレクションから全投稿を取得（キャッシュ利用を推奨）
+2. ドリンク別排出回数を集計
+3. お得度ランキングを作成（上位10件）
+4. 累計お得額を計算
+5. 統計データを返却
+
+**戻り値**:
+```typescript
+{
+  drinkRanking: Array<{
+    name: string;
+    count: number;
+  }>;
+  profitRanking: Array<{
+    drink1Name: string;
+    drink2Name: string;
+    profit: number;
+    createdAt: Timestamp;
+  }>;
+  totalProfit: number;
+}
+```
+
+**エラーケース**:
+- `INTERNAL`: サーバー内部エラー
+
+**最適化**:
+- 統計情報は頻繁に変更されないため、Cloud Firestoreのトリガー関数を使用して事前計算した結果を別のコレクションに保存することを推奨
+- 投稿が追加されるたびに統計を再計算し、キャッシュを更新
+
+#### 8.3.4. getDrinkMaster（ドリンクマスター取得）
+**目的**: 利用可能なドリンクの一覧を取得する
+
+**トリガー**: HTTPS呼び出し可能関数（Callable Function）
+
+**入力パラメータ**: なし
+
+**処理フロー**:
+1. `drinkMaster`コレクションから全ドリンク情報を取得
+2. 名前順でソートして返却
+
+**戻り値**:
+```typescript
+{
+  drinks: Array<{
+    id: string;
+    name: string;
+    price: number;
+  }>;
+}
+```
+
+**エラーケース**:
+- `INTERNAL`: サーバー内部エラー
+
+#### 8.3.5. updateStatistics（統計更新トリガー）
+**目的**: 投稿が追加された際に統計情報を自動更新する
+
+**トリガー**: Firestore トリガー（onCreate）
+- パス: `posts/{postId}`
+
+**処理フロー**:
+1. 新規投稿データを取得
+2. `statistics`コレクションの統計ドキュメントを更新
+   - ドリンク別カウントを増加
+   - 累計お得額を加算
+3. お得度ランキングを更新（必要に応じて）
+
+**戻り値**: なし（バックグラウンド処理）
+
+### 8.4. セキュリティルール
+
+#### Firestore Security Rules
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // postsコレクション: 読み取りは全員可、書き込みは関数経由のみ
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if false;  // Cloud Functions経由でのみ作成
+    }
+    
+    // drinkMasterコレクション: 読み取りは全員可、書き込みは管理者のみ
+    match /drinkMaster/{drinkId} {
+      allow read: if true;
+      allow write: if false;  // 管理コンソールからのみ更新
+    }
+    
+    // statisticsコレクション: 読み取りは全員可、書き込みは関数のみ
+    match /statistics/{docId} {
+      allow read: if true;
+      allow write: if false;  // Cloud Functions経由でのみ更新
+    }
+  }
+}
+```
+
+### 8.5. 環境変数
+- `GACHA_PRICE`: ガチャの価格（円）
+- `FIREBASE_PROJECT_ID`: FirebaseプロジェクトID
+- `CORS_ORIGIN`: 許可するオリジン（本番環境用）
+
+### 8.6. デプロイ手順
+```bash
+# Firebase CLIのインストール（初回のみ）
+npm install -g firebase-tools
+
+# Firebaseへログイン
+firebase login
+
+# functionsディレクトリで依存関係をインストール
+cd functions
+npm install
+
+# 関数をデプロイ
+firebase deploy --only functions
+```
+
+### 8.7. テスト方針
+- 各関数に対してユニットテストを実装
+- Firebase Emulator Suiteを使用したローカルテスト
+- 統合テストでエンドツーエンドの動作を確認
