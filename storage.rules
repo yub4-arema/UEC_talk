@@ -1,0 +1,16 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 投稿写真用のディレクトリ
+    match /post-photos/{filename} {
+      // 読み取りは全員可能
+      allow read: if true;
+      
+      // 書き込みは認証済みユーザーのみ（将来的な拡張用）
+      // 現在は匿名ユーザーも許可
+      allow write: if request.resource.size < 5 * 1024 * 1024  // 5MB以下
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
