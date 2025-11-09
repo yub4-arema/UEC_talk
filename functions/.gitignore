@@ -3,6 +3,10 @@ lib/
 *.js
 *.js.map
 
+# Allow config files
+!*.config.js
+!.eslintrc.js
+
 # TypeScript cache
 *.tsbuildinfo
 
