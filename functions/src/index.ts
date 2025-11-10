@@ -79,6 +79,8 @@ export const updateStatistics = onDocumentCreated(
     region: 'asia-northeast1',
   },
   async (event) => {
-    await updateStatisticsHandler(event.data);
+    if (event.data) {
+      await updateStatisticsHandler(event.data);
+    }
   }
 );
