@@ -47,7 +47,7 @@ export async function updateStatisticsHandler(
         const currentStats = statsDoc.data();
         const drinkCounts = currentStats?.drinkCounts || {};
 
-        // ドリンクカウントを増加
+        // ドリンクカウントを増加（名前ベースで集計）
         drinkCounts[drink1Name] = (drinkCounts[drink1Name] || 0) + 1;
         drinkCounts[drink2Name] = (drinkCounts[drink2Name] || 0) + 1;
 

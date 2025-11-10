@@ -35,6 +35,7 @@ export const COLLECTIONS = {
   POSTS: 'posts',
   DRINK_MASTER: 'drinkMaster',
   STATISTICS: 'statistics',
+  SEASONS: 'seasons',
 } as const;
 
 /**

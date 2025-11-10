@@ -31,6 +31,8 @@ export async function getStatisticsHandler(): Promise<StatisticsResponse> {
       const data = doc.data();
       const post: Post = {
         id: doc.id,
+        drink1Id: data.drink1Id,
+        drink2Id: data.drink2Id,
         drink1Name: data.drink1Name,
         drink2Name: data.drink2Name,
         photoUrl: data.photoUrl,

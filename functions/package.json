@@ -13,8 +13,8 @@
     "logs": "firebase functions:log",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix"
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint \"src/**/*.ts\"",
+    "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": "20"

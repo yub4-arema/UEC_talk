@@ -5,7 +5,7 @@
 
 import { HttpsError } from 'firebase-functions/v2/https';
 import { db, FieldValue } from '../config/firebase';
-import { validateDrinkName, validatePhotoUrl } from '../utils/validation';
+import { validateDrinkId, validatePhotoUrl } from '../utils/validation';
 import { COLLECTIONS, GACHA_PRICE } from '../utils/constants';
 import type {
   CreatePostRequest,
@@ -22,22 +22,24 @@ export async function createPostHandler(
   data: CreatePostRequest
 ): Promise<CreatePostResponse> {
   // 入力値のバリデーション
-  validateDrinkName(data.drink1Name, 'drink1Name');
-  validateDrinkName(data.drink2Name, 'drink2Name');
+  validateDrinkId(data.drink1Id, 'drink1Id');
+  validateDrinkId(data.drink2Id, 'drink2Id');
   validatePhotoUrl(data.photoUrl);
 
   try {
-    // ドリンクマスターから価格を取得
-    const drink1Price = await getDrinkPrice(data.drink1Name);
-    const drink2Price = await getDrinkPrice(data.drink2Name);
+    // ドリンクマスターから情報を取得
+    const drink1Info = await getDrinkInfo(data.drink1Id);
+    const drink2Info = await getDrinkInfo(data.drink2Id);
 
     // お得度を計算
-    const profit = drink1Price + drink2Price - GACHA_PRICE;
+    const profit = drink1Info.price + drink2Info.price - GACHA_PRICE;
 
     // 投稿データを作成
     const postData = {
-      drink1Name: data.drink1Name.trim(),
-      drink2Name: data.drink2Name.trim(),
+      drink1Id: data.drink1Id,
+      drink2Id: data.drink2Id,
+      drink1Name: drink1Info.name,
+      drink2Name: drink2Info.name,
       photoUrl: data.photoUrl || null,
       profit,
       createdAt: FieldValue.serverTimestamp(),
@@ -60,27 +62,36 @@ export async function createPostHandler(
 }
 
 /**
- * ドリンクマスターから価格を取得
- * @param drinkName ドリンク名
- * @returns 価格
+ * ドリンクマスターから情報を取得
+ * @param drinkId ドリンクID
+ * @returns ドリンク情報
  * @throws {HttpsError} ドリンクが見つからない場合
  */
-async function getDrinkPrice(drinkName: string): Promise<number> {
-  const snapshot = await db
+async function getDrinkInfo(drinkId: string): Promise<DrinkMaster> {
+  const drinkDoc = await db
     .collection(COLLECTIONS.DRINK_MASTER)
-    .where('name', '==', drinkName.trim())
-    .limit(1)
+    .doc(drinkId)
     .get();
 
-  if (snapshot.empty) {
+  if (!drinkDoc.exists) {
     throw new HttpsError(
       'not-found',
-      `ドリンク「${drinkName}」が見つかりません`
+      `ドリンクID「${drinkId}」が見つかりません`
     );
   }
 
-  const drinkDoc = snapshot.docs[0];
-  const drink = drinkDoc.data() as DrinkMaster;
+  const data = drinkDoc.data();
+  if (!data) {
+    throw new HttpsError(
+      'not-found',
+      `ドリンクID「${drinkId}」のデータが不正です`
+    );
+  }
 
-  return drink.price;
+  return {
+    id: drinkDoc.id,
+    name: data.name,
+    price: data.price,
+    seasonId: data.seasonId,
+  };
 }

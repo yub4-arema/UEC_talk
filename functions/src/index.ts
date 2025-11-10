@@ -11,6 +11,8 @@ import { getPostsHandler } from './handlers/getPosts';
 import { getStatisticsHandler } from './handlers/getStatistics';
 import { getDrinkMasterHandler } from './handlers/getDrinkMaster';
 import { updateStatisticsHandler } from './handlers/updateStatistics';
+import { getSeasonsHandler } from './handlers/getSeasons';
+import { getActiveSeasonHandler } from './handlers/getActiveSeason';
 import { COLLECTIONS } from './utils/constants';
 
 /**
@@ -57,7 +59,7 @@ export const getStatistics = onCall(
 
 /**
  * ドリンクマスター取得関数
- * 利用可能なドリンク一覧を取得する
+ * 利用可能なドリンク一覧を取得する（現在アクティブなシーズンのみ）
  */
 export const getDrinkMaster = onCall(
   {
@@ -66,6 +68,34 @@ export const getDrinkMaster = onCall(
   },
   async () => {
     return await getDrinkMasterHandler();
+  }
+);
+
+/**
+ * シーズン一覧取得関数
+ * すべてのシーズン（アーカイブを含む）を取得する
+ */
+export const getSeasons = onCall(
+  {
+    region: 'asia-northeast1',
+    cors: true,
+  },
+  async () => {
+    return await getSeasonsHandler();
+  }
+);
+
+/**
+ * アクティブシーズン取得関数
+ * 現在アクティブなシーズンを取得する
+ */
+export const getActiveSeason = onCall(
+  {
+    region: 'asia-northeast1',
+    cors: true,
+  },
+  async () => {
+    return await getActiveSeasonHandler();
   }
 );
 

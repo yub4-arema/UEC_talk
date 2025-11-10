@@ -11,8 +11,10 @@ import { Timestamp } from 'firebase-admin/firestore';
  */
 export interface Post {
   id: string;
-  drink1Name: string;
-  drink2Name: string;
+  drink1Id: string;
+  drink2Id: string;
+  drink1Name: string; // 表示用に保持
+  drink2Name: string; // 表示用に保持
   photoUrl: string | null;
   profit: number;
   createdAt: Timestamp;
@@ -22,8 +24,8 @@ export interface Post {
  * 投稿作成リクエスト
  */
 export interface CreatePostRequest {
-  drink1Name: string;
-  drink2Name: string;
+  drink1Id: string;
+  drink2Id: string;
   photoUrl?: string;
 }
 
@@ -52,12 +54,24 @@ export interface GetPostsResponse {
 }
 
 /**
+ * シーズン情報
+ */
+export interface Season {
+  id: string;
+  name: string;
+  startDate: Timestamp;
+  endDate: Timestamp | null; // nullの場合は現在アクティブなシーズン
+  isActive: boolean;
+}
+
+/**
  * ドリンクマスター
  */
 export interface DrinkMaster {
   id: string;
   name: string;
   price: number;
+  seasonId: string; // 所属するシーズンのID
 }
 
 /**
@@ -101,4 +115,18 @@ export interface StatisticsDocument {
   drinkCounts: { [drinkName: string]: number };
   totalProfit: number;
   lastUpdated: Timestamp;
+}
+
+/**
+ * シーズン一覧取得レスポンス
+ */
+export interface GetSeasonsResponse {
+  seasons: Season[];
+}
+
+/**
+ * 現在アクティブなシーズン取得レスポンス
+ */
+export interface GetActiveSeasonResponse {
+  season: Season | null;
 }

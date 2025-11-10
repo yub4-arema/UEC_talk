@@ -1,6 +1,6 @@
 /**
  * getDrinkMaster関数
- * 利用可能なドリンクの一覧を取得する
+ * 利用可能なドリンクの一覧を取得する（現在アクティブなシーズンのみ）
  */
 
 import { HttpsError } from 'firebase-functions/v2/https';
@@ -10,12 +10,30 @@ import type { GetDrinkMasterResponse, DrinkMaster } from '../types';
 
 /**
  * ドリンクマスター取得ハンドラー
- * @returns ドリンク一覧
+ * @returns 現在アクティブなシーズンのドリンク一覧
  */
 export async function getDrinkMasterHandler(): Promise<GetDrinkMasterResponse> {
   try {
+    // アクティブなシーズンを取得
+    const activeSeasonSnapshot = await db
+      .collection(COLLECTIONS.SEASONS)
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
+
+    if (activeSeasonSnapshot.empty) {
+      // アクティブなシーズンがない場合は空の配列を返す
+      return {
+        drinks: [],
+      };
+    }
+
+    const activeSeasonId = activeSeasonSnapshot.docs[0].id;
+
+    // アクティブなシーズンのドリンクのみを取得
     const snapshot = await db
       .collection(COLLECTIONS.DRINK_MASTER)
+      .where('seasonId', '==', activeSeasonId)
       .orderBy('name')
       .get();
 
@@ -27,6 +45,7 @@ export async function getDrinkMasterHandler(): Promise<GetDrinkMasterResponse> {
         id: doc.id,
         name: data.name,
         price: data.price,
+        seasonId: data.seasonId,
       });
     }
 

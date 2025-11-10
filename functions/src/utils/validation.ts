@@ -6,6 +6,28 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import { MAX_DRINK_NAME_LENGTH, MAX_POSTS_LIMIT } from './constants';
 
 /**
+ * ドリンクIDのバリデーション
+ * @param id ドリンクID
+ * @param fieldName フィールド名
+ * @throws {HttpsError} バリデーションエラー
+ */
+export function validateDrinkId(id: unknown, fieldName: string): void {
+  if (typeof id !== 'string') {
+    throw new HttpsError(
+      'invalid-argument',
+      `${fieldName}は文字列である必要があります`
+    );
+  }
+
+  if (id.trim().length === 0) {
+    throw new HttpsError(
+      'invalid-argument',
+      `${fieldName}は空にできません`
+    );
+  }
+}
+
+/**
  * ドリンク名のバリデーション
  * @param name ドリンク名
  * @throws {HttpsError} バリデーションエラー
