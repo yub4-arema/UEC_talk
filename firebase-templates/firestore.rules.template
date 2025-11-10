@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // postsコレクション: 読み取りは全員可、書き込みは関数経由のみ
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if false;  // Cloud Functions経由でのみ作成
+    }
+    
+    // drinkMasterコレクション: 読み取りは全員可、書き込みは管理者のみ
+    match /drinkMaster/{drinkId} {
+      allow read: if true;
+      allow write: if false;  // 管理コンソールからのみ更新
+    }
+    
+    // statisticsコレクション: 読み取りは全員可、書き込みは関数のみ
+    match /statistics/{docId} {
+      allow read: if true;
+      allow write: if false;  // Cloud Functions経由でのみ更新
+    }
+  }
+}

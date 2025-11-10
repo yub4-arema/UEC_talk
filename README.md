@@ -2,6 +2,43 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Firebase Setup
+
+This project uses Firebase for backend services. Before running the development server, you need to set up Firebase:
+
+1. Install Firebase CLI:
+```bash
+npm install -g firebase-tools
+```
+
+2. Login to Firebase:
+```bash
+firebase login
+```
+
+3. Initialize Firebase project:
+```bash
+firebase init
+```
+
+Select the following options:
+- Firestore, Functions, Storage, Emulators
+- Use the existing `functions` directory
+- Choose TypeScript for Functions
+- Install dependencies
+
+4. Copy configuration templates:
+```bash
+cp firebase-templates/firestore.rules.template firestore.rules
+cp firebase-templates/firestore.indexes.json.template firestore.indexes.json
+cp firebase-templates/storage.rules.template storage.rules
+cp firebase-templates/firebase.json.template firebase.json
+```
+
+For detailed Firebase Functions setup, see [functions/README.md](functions/README.md).
+
+### Development Server
+
 First, run the development server:
 
 ```bash

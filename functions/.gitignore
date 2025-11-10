@@ -1,0 +1,36 @@
+# Compiled JavaScript files
+lib/
+*.js
+*.js.map
+
+# Allow config files
+!*.config.js
+!.eslintrc.js
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Dependency directories
+node_modules/
+
+# Test coverage
+coverage/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Firebase cache
+.firebase/
