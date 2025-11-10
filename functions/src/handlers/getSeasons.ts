@@ -23,13 +23,24 @@ export async function getSeasonsHandler(): Promise<GetSeasonsResponse> {
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
+      
+      // 必須フィールドの存在確認と型検証
+      if (
+        typeof data.ver !== 'number' ||
+        typeof data.name !== 'string' ||
+        typeof data.isActive !== 'boolean'
+      ) {
+        console.error('Invalid season data:', doc.id);
+        continue; // 不正なデータはスキップ
+      }
+
       seasons.push({
         id: doc.id,
         ver: data.ver,
         name: data.name,
         startDate: data.startDate,
         endDate: data.endDate || null,
-        isActive: data.isActive || false,
+        isActive: data.isActive,
       });
     }
 

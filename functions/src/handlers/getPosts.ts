@@ -58,8 +58,8 @@ export async function getPostsHandler(
       const data = doc.data();
       posts.push({
         id: doc.id,
-        drink1Id: data.drink1Id,
-        drink2Id: data.drink2Id,
+        drink1Id: data.drink1Id ?? '', // マイグレーション前データ対応
+        drink2Id: data.drink2Id ?? '', // マイグレーション前データ対応
         drink1Name: data.drink1Name,
         drink2Name: data.drink2Name,
         photoUrl: data.photoUrl,

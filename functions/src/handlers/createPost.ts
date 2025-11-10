@@ -27,9 +27,39 @@ export async function createPostHandler(
   validatePhotoUrl(data.photoUrl);
 
   try {
+    // アクティブなシーズンIDを取得
+    const activeSeasonSnapshot = await db
+      .collection(COLLECTIONS.SEASONS)
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
+    
+    if (activeSeasonSnapshot.empty) {
+      throw new HttpsError(
+        'failed-precondition',
+        '現在アクティブなシーズンがありません'
+      );
+    }
+    
+    const activeSeasonId = activeSeasonSnapshot.docs[0].id;
+
     // ドリンクマスターから情報を取得
     const drink1Info = await getDrinkInfo(data.drink1Id);
     const drink2Info = await getDrinkInfo(data.drink2Id);
+
+    // ドリンクがアクティブなシーズンに属しているか検証
+    if (drink1Info.seasonId !== activeSeasonId) {
+      throw new HttpsError(
+        'invalid-argument',
+        `ドリンクID「${data.drink1Id}」は現在のシーズンで利用できません`
+      );
+    }
+    if (drink2Info.seasonId !== activeSeasonId) {
+      throw new HttpsError(
+        'invalid-argument',
+        `ドリンクID「${data.drink2Id}」は現在のシーズンで利用できません`
+      );
+    }
 
     // お得度を計算
     const profit = drink1Info.price + drink2Info.price - GACHA_PRICE;
@@ -85,6 +115,18 @@ async function getDrinkInfo(drinkId: string): Promise<DrinkMaster> {
     throw new HttpsError(
       'not-found',
       `ドリンクID「${drinkId}」のデータが不正です`
+    );
+  }
+
+  // データ型の検証
+  if (
+    typeof data.name !== 'string' ||
+    typeof data.price !== 'number' ||
+    typeof data.seasonId !== 'string'
+  ) {
+    throw new HttpsError(
+      'internal',
+      `ドリンクID「${drinkId}」のデータ形式が不正です`
     );
   }
 

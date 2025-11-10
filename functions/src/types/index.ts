@@ -58,7 +58,7 @@ export interface GetPostsResponse {
  */
 export interface Season {
   id: string;
-  ver: number; // バージョン番号（人が順番を判別できるように）
+  ver: number; // シーズンのバージョン番号（1, 2, 3...と昇順、ソート・表示順の判定に使用。正の整数を推奨）
   name: string;
   startDate: Timestamp;
   endDate: Timestamp | null; // nullの場合は現在アクティブなシーズン

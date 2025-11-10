@@ -28,13 +28,27 @@ export async function getActiveSeasonHandler(): Promise<GetActiveSeasonResponse>
 
     const doc = snapshot.docs[0];
     const data = doc.data();
+    
+    // 必須フィールドの存在確認と型検証
+    if (
+      typeof data.ver !== 'number' ||
+      typeof data.name !== 'string' ||
+      typeof data.isActive !== 'boolean'
+    ) {
+      // 不正なデータの場合はnullを返す
+      console.error('Invalid active season data:', doc.id);
+      return {
+        season: null,
+      };
+    }
+
     const season: Season = {
       id: doc.id,
       ver: data.ver,
       name: data.name,
       startDate: data.startDate,
       endDate: data.endDate || null,
-      isActive: data.isActive || false,
+      isActive: data.isActive,
     };
 
     return {
