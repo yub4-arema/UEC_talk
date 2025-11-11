@@ -139,13 +139,18 @@ export async function getMyPosts(postIds: string[]): Promise<Post[]> {
 
     const posts: Post[] = [];
 
-    // 各投稿IDに対して個別に取得
-    // Firestoreの制限により、in クエリは最大10件までのため、個別取得を推奨
-    for (const postId of postIds) {
-      const post = await getPostById(postId);
-      if (post) {
-        posts.push(post);
-      }
+    // Firestoreのinクエリは最大30件まで指定可能なので、30件ずつバッチ取得する
+    const batchSize = 30;
+    for (let i = 0; i < postIds.length; i += batchSize) {
+      const batch = postIds.slice(i, i + batchSize);
+      const q = query(
+        collection(db, 'posts'),
+        where('__name__', 'in', batch)
+      );
+      const snapshot = await getDocs(q);
+      snapshot.forEach((doc) => {
+        posts.push(convertToPost(doc.id, doc.data()));
+      });
     }
 
     // 投稿日時の新しい順にソート
