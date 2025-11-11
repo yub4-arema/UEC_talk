@@ -72,7 +72,7 @@ export async function createPost(
  */
 function convertToPost(id: string, data: DocumentData): Post {
   return {
-    id: id, // Firestore IDは文字列のまま保持
+    id, // Firestore IDは文字列のまま保持
     nickname: data.nickname,
     postedAt: data.postedAt.toDate(),
     drink1_id: data.drink1_id,
