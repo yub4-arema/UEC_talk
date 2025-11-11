@@ -83,7 +83,7 @@ types.ts に定義されたデータ型を使用する。
 
 - Drink: { id: number, name: string, price: number, howManySold: number }
 - gachaList: { version: number, drinks: Drink[], startDate: Date, endDate: Date, cost: number }
-- Post: { id: number, nickname: string, postedAt: Date, drink1_id: number, drink2_id: number, pictureUrl: string, profits: number }
+- Post: { id: string, nickname: string, postedAt: Date, drink1_id: number, drink2_id: number, pictureUrl: string, profits: number }
 - AggregateData: { totalProfit: number, totalGachaCount: number, totalDrinkCount: number }
 
 

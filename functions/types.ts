@@ -27,7 +27,7 @@ export interface User {
   sumProfit: number;
   totalGachaCount: number;
   totalDrinkCount: number;
-  myPostsId: number[];
+  myPostsId: string[];
 }
 
 export interface AggregateData {
