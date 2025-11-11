@@ -24,6 +24,7 @@
     - 任意で、結果の写真をアップロードできる。
     - 投稿日時はシステムが自動的に記録する。
     - AggregateData型のデータを全部加算する。
+    - 投稿したPOSTのIdはローカルに保存する。
 
 - **F-02: 投稿タイムライン表示機能**
     - すべてのユーザーの投稿を時系列（新しい順）で表示する。
@@ -42,6 +43,48 @@
 
 ## 3. データ要件
 types.ts に定義されたデータ型を使用する。
+
+---
+
+## 3.1 Firestore DB構造
+
+### コレクション一覧
+
+- **posts**
+    - ガチャ投稿データ
+    - 主なフィールド:
+        - nickname: string
+        - postedAt: Timestamp
+        - drink1_id: number
+        - drink2_id: number
+        - pictureUrl: string
+        - profits: number
+
+- **gachaLists**
+    - ガチャのバージョン・ドリンクリスト
+    - 主なフィールド:
+        - version: number
+        - drinks: Drink[]
+        - startDate: Timestamp
+        - endDate: Timestamp
+        - cost: number
+
+- **aggregateData**
+    - サイト全体の集計データ
+    - ドキュメントID: summary
+    - 主なフィールド:
+        - totalProfit: number
+        - totalGachaCount: number
+        - totalDrinkCount: number
+
+---
+
+### データ型例
+
+- Drink: { id: number, name: string, price: number, howManySold: number }
+- gachaList: { version: number, drinks: Drink[], startDate: Date, endDate: Date, cost: number }
+- Post: { id: number, nickname: string, postedAt: Date, drink1_id: number, drink2_id: number, pictureUrl: string, profits: number }
+- AggregateData: { totalProfit: number, totalGachaCount: number, totalDrinkCount: number }
 
 
 ## 4. 技術要件
@@ -71,29 +114,61 @@ types.ts に定義されたデータ型を使用する。
 
 ### 8.1. 投稿関連関数
 
+
 #### 8.1.1. `createPost`
-- **説明**: ガチャ結果を投稿する
+- **説明**: ガチャ結果を投稿する。ニックネーム・ドリンクID・お得額・画像（任意）を受け取り、画像はFirebase Storageにアップロード。Firestoreに投稿データを保存し、投稿IDを返す。型安全・エラーハンドリング対応。
+- **引数**: nickname（string）, drink1_id（number）, drink2_id（number）, profits（number）, pictureFile（File, 任意）
+- **返り値**: Promise<string>（投稿ID）
 
 #### 8.1.2. `getPosts`
-- **説明**: タイムライン表示用の投稿一覧を取得（新順）
+- **説明**: タイムライン表示用の投稿一覧を新しい順で取得。デフォルト50件。FirestoreのタイムスタンプをDate型に変換し、型安全に返却。
+- **引数**: limitCount（number, 任意）
+- **返り値**: Promise<Post[]>（投稿配列）
 
 #### 8.1.3. `getPostById`
-- **説明**: 特定の投稿を取得
+- **説明**: 投稿IDを指定して1件取得。存在しない場合はnullを返す。
+- **引数**: postId（string）
+- **返り値**: Promise<Post | null>
 
-#### 8.1.4. `getMyPost`
-- **説明**: 自分の投稿した投稿一覧を取得
+#### 8.1.4. `getMyPosts`
+- **説明**: ローカルストレージから取得した投稿ID配列を受け取り、各投稿を取得して新しい順にソート。
+- **引数**: postIds（string[]）
+- **返り値**: Promise<Post[]>
+
+**特徴**: TypeScript型安全性、JSDocコメント、エラーハンドリング、画像アップロード対応。
 
 
 ### 8.2. ドリンク関連関数
+
 #### 8.2.1. `getDrinkList`
-- **説明**: ドリンク一覧を取得
+- **説明**: 現在有効なガチャリスト（endDateが未来）を取得。複数バージョンがある場合は最新版を返す。
+- **引数**: なし
+- **返り値**: Promise<gachaList | null>
+
+#### 8.2.2. `getDrinkById`
+- **説明**: ドリンクIDから個別のドリンク情報を取得。
+- **引数**: drinkId（number）
+- **返り値**: Promise<Drink | null>
+
+**特徴**: 型安全、最新データ優先、エラーハンドリング。
 
 
 ### 8.3. 統計関連関数
 
+
 #### 8.3.1. `getDrinkRanking`
-- **説明**: ドリンク別排出率ランキングを取得
+- **説明**: 現在のgachaListの全ドリンクを対象に、排出数・排出率（パーセント）を計算し、降順でランキング化。
+- **引数**: なし
+- **返り値**: Promise<DrinkRanking[]>（ランキング配列）
 
+#### 8.3.2. `getTotalProfit`
+- **説明**: サイト全体の累計お得額を取得。集計データがなければ全投稿から計算。
+- **引数**: なし
+- **返り値**: Promise<number>
 
-#### 8.3.3. `getTotalProfit(): Promise<number>`
-- **説明**: サイト全体の累計お得額を取得
+#### 8.3.3. `getAggregateData`
+- **説明**: サイト全体の集計データ（累計お得額・総ガチャ回数・総ドリンク数）を取得。集計データがなければ全投稿から計算。
+- **引数**: なし
+- **返り値**: Promise<AggregateData>
+
+**特徴**: パフォーマンス最適化（集計データ優先）、フォールバック機能、型安全、JSDocコメント、エラーハンドリング。
