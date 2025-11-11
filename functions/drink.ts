@@ -1,9 +1,6 @@
 import {
   collection,
   getDocs,
-  query,
-  orderBy,
-  limit,
   DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -31,7 +28,7 @@ function convertToDrink(data: DocumentData): Drink {
 function convertToGachaList(data: DocumentData): gachaList {
   return {
     version: data.version,
-    drinks: data.drinks.map((drink: any) => convertToDrink(drink)),
+    drinks: data.drinks.map((drink: DocumentData) => convertToDrink(drink)),
     startDate: data.startDate.toDate(),
     endDate: data.endDate.toDate(),
     cost: data.cost,

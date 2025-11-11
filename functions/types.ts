@@ -14,7 +14,7 @@ export interface gachaList {
 }
 
 export interface Post {
-  id: number;
+  id: string;
   nickname: string;
   postedAt: Date;
   drink1_id: number;

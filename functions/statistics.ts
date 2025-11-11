@@ -3,7 +3,6 @@ import {
   getDocs,
   getDoc,
   doc,
-  DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Drink, AggregateData } from './types';
@@ -76,7 +75,7 @@ export async function getDrinkRanking(): Promise<DrinkRanking[]> {
     return ranking;
   } catch (error) {
     console.error('ドリンクランキングの取得に失敗しました:', error);
-    throw new Error('ドリンクランキングの取得に失敗しました');
+    throw new Error(`ドリンクランキングの取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -100,7 +99,7 @@ export async function getTotalProfit(): Promise<number> {
     return data.totalProfit || 0;
   } catch (error) {
     console.error('累計お得額の取得に失敗しました:', error);
-    throw new Error('累計お得額の取得に失敗しました');
+    throw new Error(`累計お得額の取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -150,7 +149,7 @@ export async function getAggregateData(): Promise<AggregateData> {
     };
   } catch (error) {
     console.error('集計データの取得に失敗しました:', error);
-    throw new Error('集計データの取得に失敗しました');
+    throw new Error(`集計データの取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

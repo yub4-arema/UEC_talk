@@ -6,12 +6,11 @@ import {
   doc,
   query,
   orderBy,
-  where,
   limit,
   Timestamp,
   DocumentData,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from './firebase';
 import type { Post } from './types';
 
@@ -31,13 +30,14 @@ export async function createPost(
   profits: number,
   pictureFile?: File
 ): Promise<string> {
-  try {
-    let pictureUrl = '';
+  let storageRef: ReturnType<typeof ref> | null = null;
+  let pictureUrl = '';
 
+  try {
     // 画像がある場合はStorageにアップロード
     if (pictureFile) {
       const timestamp = Date.now();
-      const storageRef = ref(storage, `posts/${timestamp}_${pictureFile.name}`);
+      storageRef = ref(storage, `posts/${timestamp}_${pictureFile.name}`);
       await uploadBytes(storageRef, pictureFile);
       pictureUrl = await getDownloadURL(storageRef);
     }
@@ -55,8 +55,12 @@ export async function createPost(
 
     return docRef.id;
   } catch (error) {
+    // Firestoreへの保存に失敗した場合、アップロード済みの画像を削除
+    if (storageRef && pictureUrl) {
+      await deleteObject(storageRef).catch(console.error);
+    }
     console.error('投稿の作成に失敗しました:', error);
-    throw new Error('投稿の作成に失敗しました');
+    throw new Error(`投稿の作成に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -68,7 +72,7 @@ export async function createPost(
  */
 function convertToPost(id: string, data: DocumentData): Post {
   return {
-    id: parseInt(id, 36), // Firestore IDを数値に変換（簡易的な実装）
+    id: id, // Firestore IDは文字列のまま保持
     nickname: data.nickname,
     postedAt: data.postedAt.toDate(),
     drink1_id: data.drink1_id,
@@ -97,7 +101,7 @@ export async function getPosts(limitCount: number = 50): Promise<Post[]> {
     return posts;
   } catch (error) {
     console.error('投稿一覧の取得に失敗しました:', error);
-    throw new Error('投稿一覧の取得に失敗しました');
+    throw new Error(`投稿一覧の取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -118,7 +122,7 @@ export async function getPostById(postId: string): Promise<Post | null> {
     return convertToPost(postSnap.id, postSnap.data());
   } catch (error) {
     console.error('投稿の取得に失敗しました:', error);
-    throw new Error('投稿の取得に失敗しました');
+    throw new Error(`投稿の取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -150,6 +154,6 @@ export async function getMyPosts(postIds: string[]): Promise<Post[]> {
     return posts;
   } catch (error) {
     console.error('自分の投稿一覧の取得に失敗しました:', error);
-    throw new Error('自分の投稿一覧の取得に失敗しました');
+    throw new Error(`自分の投稿一覧の取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
