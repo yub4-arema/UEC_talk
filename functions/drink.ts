@@ -67,7 +67,7 @@ export async function getDrinkList(): Promise<gachaList | null> {
     return currentGachaList;
   } catch (error) {
     console.error('ドリンク一覧の取得に失敗しました:', error);
-    throw new Error('ドリンク一覧の取得に失敗しました');
+    throw new Error(`ドリンク一覧の取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
