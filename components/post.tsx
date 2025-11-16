@@ -21,9 +21,9 @@ const Post = () => {
   const [content, setContent] = useState("")
   const [authorName, setAuthorName] = useState("")
   const [category, setCategory] = useState<PostCategory>("授業")
-  const [targetYear, setTargetYear] = useState<number | undefined>(undefined)
-  const [targetMajor, setTargetMajor] = useState<"I類" | "II類" | "III類" | undefined>(undefined)
-  const [targetClass, setTargetClass] = useState("")
+  const [targetYear, setTargetYear] = useState<number | null>(null)
+  const [targetMajor, setTargetMajor] = useState<"I類" | "II類" | "III類" | null>(null)
+  const [targetClass, setTargetClass] = useState<string | null>(null)
 
   const categoryOptions: ComboboxOption[] = [
     { value: "授業", label: "授業" },
@@ -58,7 +58,7 @@ const Post = () => {
         category,
         targetYear,
         targetMajor,
-        targetClass: targetClass || undefined,
+        targetClass: targetClass ,
         createdAt: new Date(),
         likeCount: 0,
       });
@@ -67,9 +67,9 @@ const Post = () => {
       setContent("");
       setAuthorName("");
       setCategory("授業");
-      setTargetYear(undefined);
-      setTargetMajor(undefined);
-      setTargetClass("");
+      setTargetYear(null);
+      setTargetMajor(null);
+      setTargetClass(null);
       alert("投稿しました！");
     } catch (error) {
       console.error("投稿エラー:", error);
@@ -82,6 +82,19 @@ const Post = () => {
       <FieldSet>
         <FieldLegend>新規投稿</FieldLegend>
         <FieldGroup>
+          <Field>
+            <FieldLabel>カテゴリ</FieldLabel>
+            <RadioGroup value={category} onValueChange={(value) => setCategory(value as PostCategory)}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="授業" id="category-class" />
+                <FieldLabel htmlFor="category-class">授業</FieldLabel>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="その他" id="category-other" />
+                <FieldLabel htmlFor="category-other">その他</FieldLabel>
+              </div>
+            </RadioGroup>
+          </Field>
           <Field>
             <FieldLabel htmlFor="authorName">投稿者名</FieldLabel>
             <Input
@@ -103,19 +116,7 @@ const Post = () => {
             />
           </Field>
 
-          <Field>
-            <FieldLabel>カテゴリ</FieldLabel>
-            <RadioGroup value={category} onValueChange={(value) => setCategory(value as PostCategory)}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="授業" id="category-class" />
-                <FieldLabel htmlFor="category-class">授業</FieldLabel>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="その他" id="category-other" />
-                <FieldLabel htmlFor="category-other">その他</FieldLabel>
-              </div>
-            </RadioGroup>
-          </Field>
+          
           {category === "授業" && (
             <div className="space-y-4">
               <div className="flex gap-4">
@@ -125,7 +126,7 @@ const Post = () => {
                     placeholder="指定なし"
                     searchPlaceholder="学年を検索..."
                     value={targetYear?.toString() ?? ""}
-                    onValueChange={(value) => setTargetYear(value ? parseInt(value) : undefined)}
+                    onValueChange={(value) => setTargetYear(value ? Number(value) : null)}
                     label="学年"
                     showLabel={true}
                     width="w-[100px]"

@@ -22,13 +22,13 @@ interface Post {
   // --- 投稿の対象者情報 (フィルタリング用) ---
   
   /** 対象学年 (例: 1年生 [cite: 24]) */
-  targetYear?: number;
+  targetYear?: number | null;
 
   /** 対象類 (例: "I類" , "II類" [cite: 8]) */
-  targetMajor?: "I類" | "II類" | "III類";
+  targetMajor?: "I類" | "II類" | "III類" | null;
   
   /** 対象クラス (例: "Aクラス" , "Bクラス" [cite: 14]) */
-  targetClass?: string;  
+  targetClass?: string | null;  
 
   // --- インタラクション情報 ---
   
