@@ -1,16 +1,19 @@
+import Talk from "@/components/talk"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function Home() {
   return (
-    <div className="flex flex-col justify-center items-center">
-      <Tabs defaultValue="account" className="w-[400px]">
+    <>
+      <Tabs defaultValue="UEC" className="w-[400px]">
   <TabsList>
-    <TabsTrigger value="account">統計</TabsTrigger>
-    <TabsTrigger value="password">タイムライン</TabsTrigger>
+    <TabsTrigger value="posts">Posts</TabsTrigger>
+    <TabsTrigger value="talk">Talk</TabsTrigger>
   </TabsList>
-  <TabsContent value="account">Make changes to your account here.</TabsContent>
-  <TabsContent value="password">Change your password here.</TabsContent>
+  <TabsContent value="posts">Make changes to your account here.</TabsContent>
+  <TabsContent value="talk">
+    <Talk />
+  </TabsContent>
 </Tabs>
-    </div>
+    </>
   )
 }
