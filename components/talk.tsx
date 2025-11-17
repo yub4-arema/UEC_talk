@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   InputGroup,
   InputGroupAddon,
@@ -11,12 +11,42 @@ import { CiPaperplane } from "react-icons/ci";
 import { IoHourglassOutline } from "react-icons/io5";
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-
 import TalkAi from "@/functions/talk"
+
 export default function Talk() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const callRssApi = async () => {
+    const rssUrl = process.env.NEXT_PUBLIC_RSS_URL;
+    if (!rssUrl) {
+      console.warn("RSS URLが設定されていません");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/rss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rssUrl }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        savedCount?: number;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        console.warn("RSS保存APIが失敗しました", payload.error || response.statusText);
+        return;
+      }
+
+      console.log(`RSS保存: ${payload.savedCount ?? 0}件`);
+    } catch (error) {
+      console.error("RSS保存APIの呼び出しに失敗しました", error);
+    }
+  };
 
   const handleAsk = async () => {
     if (!question.trim()) return;
@@ -24,6 +54,7 @@ export default function Talk() {
     setLoading(true);
     setResponse("");
       try {
+        await callRssApi();
       const res = await TalkAi(question);
       if (res.text) {
         setResponse(res.text);
@@ -78,7 +109,7 @@ return (
     ) : (
       <Textarea placeholder="まずは質問" value={response} readOnly />
     )}
-      
+<button onClick={callRssApi}>新しいデータを保存</button>
   </div>
 
 );
