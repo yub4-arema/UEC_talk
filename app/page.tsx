@@ -15,7 +15,7 @@ export default function Home() {
   const [postings, setPostings] = useState(false);
   return (
     <div className="flex flex-col items-center justify-center p-4 gap-8">
-      <h1 className="text-3xl font-bold">UECinfo</h1>
+      <h1 className="text-3xl font-bold">２５あつまらい！</h1>
       <Tabs defaultValue="posts" className="w-full max-w-2xl">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="posts">投稿</TabsTrigger>

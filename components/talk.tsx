@@ -74,9 +74,7 @@ return (
       </InputGroupAddon>
     </InputGroup>
     {loading ? (
-      <div className="flex justify-center" aria-label="読み込み中">
-    <div className="animate-spin h-8 w-8 bg-[#ffffff] border-[#000000] rounded-xl"></div>
-</div>
+      <Textarea placeholder="読み込み中..." value="回答中です。お茶でも飲みながらまったりお待ちください。"readOnly />
     ) : (
       <Textarea placeholder="まずは質問" value={response} readOnly />
     )}

@@ -74,7 +74,7 @@ const TalkAi = async (question: string) => {
     // Build the system prompt (configurable via env var)
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       contents: `
       現在の時間は${new Date().toISOString()}です。曜日は${new Date().toLocaleDateString('ja-JP', { weekday: 'long' })}です。
       あなたは国立大学法人、電気通信大学について情報をユーザーに教えるAIです。最近の情報は次のとおりです。${postsCSV} 
