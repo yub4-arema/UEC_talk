@@ -65,7 +65,7 @@ const Post = () => {
       
       // 投稿成功後、フォームをリセット
       setContent("");
-      setAuthorName("");
+      setAuthorName("名無しのりさじゅう");
       setCategory("授業");
       setTargetYear(null);
       setTargetMajor(null);

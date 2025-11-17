@@ -15,11 +15,11 @@ export default function Home() {
   const [postings, setPostings] = useState(false);
   return (
     <div className="flex flex-col items-center justify-center p-4 gap-8">
-      <h1 className="text-3xl font-bold">２５あつまらい！</h1>
+      <h1 className="text-3xl font-bold">25_AI</h1>
       <Tabs defaultValue="posts" className="w-full max-w-2xl">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="posts">投稿</TabsTrigger>
-          <TabsTrigger value="talk">AI相談</TabsTrigger>
+          <TabsTrigger value="talk">AI質問</TabsTrigger>
         </TabsList>
         <TabsContent value="posts" className="space-y-6">
           <div>

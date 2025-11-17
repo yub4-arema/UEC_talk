@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from "react"
+import {useState } from "react"
 import {
   InputGroup,
   InputGroupAddon,
@@ -10,7 +10,6 @@ import {
 import { CiPaperplane } from "react-icons/ci";
 import { IoHourglassOutline } from "react-icons/io5";
 import { Textarea } from "@/components/ui/textarea"
-import { Skeleton } from "@/components/ui/skeleton"
 import TalkAi from "@/functions/talk"
 
 export default function Talk() {
@@ -109,7 +108,6 @@ return (
     ) : (
       <Textarea placeholder="まずは質問" value={response} readOnly />
     )}
-<button onClick={callRssApi}>新しいデータを保存</button>
   </div>
 
 );
