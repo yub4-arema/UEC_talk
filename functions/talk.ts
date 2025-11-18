@@ -4,9 +4,32 @@ import { GoogleGenAI } from "@google/genai";
 import { getLatest50Posts } from "./posts";
 import { getLatest200RssFromFirestore } from "./rss";
 import { FirstSemesterTimeTable,SecondSemesterTimeTable,StudyHandbook} from "@/lib/data";
-import { db } from "./firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc, Firestore } from "firebase/firestore";
 import type { TalkLog } from "./types";
+
+// サーバーサイド用Firebase初期化
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+let app;
+let db: Firestore | null = null;
+
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+} catch (error: any) {
+  // すでに初期化されている場合
+  if (error.code !== 'app/duplicate-app') {
+    console.error('Firebase初期化エラー:', error);
+  }
+}
 
 // The client gets the API key from the environment variable `GEMINI_API_KEY`.
 const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY || ""});
@@ -141,6 +164,10 @@ const SeeNewData=async()=>{
  */
 const saveTalkLog = async (log: TalkLog): Promise<void> => {
   try {
+    if (!db) {
+      console.error('❌ Firestoreが初期化されていません');
+      return;
+    }
     const talkLogsCollection = collection(db, 'talkLogs');
     await addDoc(talkLogsCollection, {
       question: log.question,
