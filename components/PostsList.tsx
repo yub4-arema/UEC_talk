@@ -56,7 +56,16 @@ const PostItem = ({ post }: { post: Post }) => {
       <CardHeader>
         <CardTitle>{post.authorName}</CardTitle>
         <CardDescription>
-          {post.category} • {new Date(post.createdAt).toLocaleString("ja-JP")}
+              {post.category} • {
+                (() => {
+                   
+                    const ts = post.createdAt as unknown as { seconds: number; nanoseconds: number }
+                    const date = new Date(ts.seconds * 1000 + Math.floor(ts.nanoseconds / 1e6))
+                    return date.toLocaleString("ja-JP")
+                  
+                  
+                })()
+              }
         </CardDescription>
       </CardHeader>
       <CardContent>
