@@ -17,7 +17,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/conmbobox"
 import type { PostCategory } from "@/functions/types"
 import { makePost } from "@/functions/posts"
 
-const Post = () => {
+const Post = ({ ChangePosting }: { ChangePosting: Function }) => {
   const [content, setContent] = useState("")
   const [authorName, setAuthorName] = useState("")
   const [category, setCategory] = useState<PostCategory>("授業")
@@ -159,7 +159,13 @@ const Post = () => {
             </div>
           )}
 
-          <Button onClick={handleSubmit}>投稿する</Button>
+          <Button onClick={
+            () => {
+              handleSubmit();
+              
+              ChangePosting();
+            }
+          }>投稿する</Button>
         </FieldGroup>
       </FieldSet>
     </>

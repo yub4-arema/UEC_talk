@@ -9,9 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Latest50PostsResponse, Post } from "@/functions/types"
+import { Post } from "@/functions/types"
 import { getLatest50Posts } from "@/functions/posts"
-import { Button } from "@/components/ui/button"
 
 export default function PostsLists() {
   const [posts, setPosts] = useState<Post[]>([])

@@ -40,7 +40,7 @@ export default function Home() {
               <div className="flex justify-end mb-4">
                 <Button variant="outline" onClick={()=>setPostings(!postings)}>閉じる</Button>
               </div>
-              <Post />
+              <Post ChangePosting={() => setPostings(!postings)} />
             </div>
           </div>}
         </TabsContent>
