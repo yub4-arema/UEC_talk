@@ -30,7 +30,7 @@ function isValidProtocol(url: URL): boolean {
 
 function createDocId(rssItem: RssItem): string {
   return createHash("sha256")
-    .update(rssItem.guid || rssItem.link)
+    .update(rssItem.guid || rssItem.link || ””)
     .digest("hex");
 }
 
