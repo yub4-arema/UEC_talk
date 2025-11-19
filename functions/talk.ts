@@ -326,7 +326,7 @@ const TalkAi = async (question: string) => {
   </study_handbook>
 
   <time_tables>
-    2025年度前期・後期時間割: 現在修正中です。
+    2025年度後期時間割: ${SecondSemesterTimeTable}
   </time_tables>
 
   <recent_posts_csv>
