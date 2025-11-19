@@ -78,7 +78,7 @@ return (
     <InputGroup>
       <InputGroupTextarea
         id="textarea-code-32"
-        placeholder={`質問を入力してください\n(直近の投稿やtwitterの内容を参考に回答します.)`}
+        placeholder={`質問を入力してください\n(直近の投稿やtwitterの直近のポスト200件を参考に回答します。\n質問のたびに記憶はリセットされます...)`}
         className="min-h-[200px]"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
