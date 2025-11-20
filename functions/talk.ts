@@ -109,23 +109,16 @@ const TalkAi = async (question: string) => {
     const latestPosts = await getLatest50Posts();
     
     // Add error handling for RSS fetch - get from both collections
-    const [rss1, rss2] = await Promise.all([
+    const rss1 = await 
       getLatest200RssFromFirestore("rss_items").catch((err: unknown) => {
         console.error('RSS1取得エラー:', err);
         return { items: [] };
-      }),
+      });
+const rss2 = await
       getLatest200RssFromFirestore("rss_items_2").catch((err: unknown) => {
         console.error('RSS2取得エラー:', err);
         return { items: [] };
-      }),
-    ]);
-
-    // Merge RSS items from both collections
-    const latestRss = {
-      items: [...(rss1.items || []), ...(rss2.items || [])].sort((a, b) => 
-        (b.pubDate?.getTime?.() ?? 0) - (a.pubDate?.getTime?.() ?? 0)
-      ).slice(0, 200)
-    };
+      });
 
     // Convert posts to a compact CSV. Include all parameters except `id`.
     // - createdAt: ISO string
@@ -167,7 +160,7 @@ const TalkAi = async (question: string) => {
     };
 
     const postsCSV = toCSV(latestPosts);
-
+    
     // Convert RSS items to CSV format
     const toRssCSV = (r: any) => {
       if (!r?.items || r.items.length === 0) return '最新のRSSフィードはありません。';
@@ -195,7 +188,9 @@ const TalkAi = async (question: string) => {
       return csv;
     };
 
-    const rssCSV = toRssCSV(latestRss);
+    const rssCSV = toRssCSV(rss1);
+
+    const OfficialRssCSV = toRssCSV(rss2);
 
     // Build the system prompt (configurable via env var)
 
@@ -260,6 +255,10 @@ const TalkAi = async (question: string) => {
   <twitter_rss_csv>
     ${rssCSV}
   </twitter_rss_csv>
+
+  <official_rss_csv>
+    ${OfficialRssCSV}
+  </official_rss_csv>
 </context>
 
 <user_question>
