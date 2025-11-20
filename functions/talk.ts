@@ -3,6 +3,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { getLatest50Posts } from "./posts";
 import { getLatest200RssFromFirestore } from "./rss";
+import { fetchAllRssFeeds } from "./api/fetchAllRssFeeds";
 import { FirstSemesterTimeTable,SecondSemesterTimeTable,StudyHandbook} from "@/lib/data";
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, Firestore } from "firebase/firestore";
@@ -62,102 +63,6 @@ const convertToISOString = (date: any): string => {
   }
 };
 
-const SeeNewData=async()=>{
-  try {
-
-    const latestPosts = await getLatest50Posts();
-    
-    // Add error handling for RSS fetch
-    const latestRss = await getLatest200RssFromFirestore().catch((err: unknown) => {
-      console.error('RSS取得エラー:', err);
-      return { items: [] };
-    });
-
-    // Convert posts to a compact CSV. Include all parameters except `id`.
-    // - createdAt: ISO string
-    // - content: keep as-is but remove newlines (CSV needs single-line fields)
-    // - other optional fields included with empty string fallback
-    const toCSV = (p: any) => {
-      if (!p?.posts || p.posts.length === 0) return '最新投稿はありません。';
-
-      // Collect unique keys from first post + values in Post type.
-      // We'll use the fields from the Post type explicitly to control order.
-      const headers = [
-        'authorName',
-        'createdAt',
-        'content',
-        'category',
-        'targetYear',
-        'targetMajor',
-        'targetClass',
-        'likeCount',
-      ];
-
-      const rows = p.posts.map((post: any) => {
-        // Exclude id if exists — we don't include it in headers
-        return headers.map((h) => {
-          switch (h) {
-            case 'createdAt':
-              return escapeCsvValue(convertToISOString(post.createdAt));
-            case 'content':
-              // keep content as-is, but strip newlines
-              return escapeCsvValue(post.content ?? '');
-            default:
-              return escapeCsvValue(post[h]);
-          }
-        }).join(',');
-      });
-
-      const csv = [headers.join(','), ...rows].join('\n');
-      return csv;
-    };
-
-    const postsCSV = toCSV(latestPosts);
-
-    // Convert RSS items to CSV format
-    const toRssCSV = (r: any) => {
-      if (!r?.items || r.items.length === 0) return '最新のRSSフィードはありません。';
-
-      const headers = [
-        'title',
-        'link',
-        'pubDate',
-        'description',
-        'author',
-      ];
-
-      const rows = r.items.map((item: any) => {
-        return headers.map((h) => {
-          switch (h) {
-            case 'pubDate':
-              return escapeCsvValue(convertToISOString(item.pubDate));
-            default:
-              return escapeCsvValue(item[h]);
-          }
-        }).join(',');
-      });
-
-      const csv = [headers.join(','), ...rows].join('\n');
-      return csv;
-    };
-
-    const rssCSV = toRssCSV(latestRss);
-
-    // Console output for debugging
-    console.log('========== データ取得完了 ==========');
-    console.log(`📝 投稿データ: ${latestPosts?.posts?.length || 0}件取得`);
-    console.log('投稿CSV:');
-    console.log(postsCSV);
-    console.log(`📡 RSSフィード: ${latestRss?.items?.length || 0}件取得`);
-    console.log('RSS CSV:');
-    console.log(rssCSV);
-    console.log('=====================================\n');
-
-  } catch (error) {
-    console.error('AI API エラー:', error);
-    const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-  }
-}
 
 /**
  * 会話ログをFirestoreに保存
@@ -195,13 +100,32 @@ const TalkAi = async (question: string) => {
       };
     }
 
+    // RSS feeds を事前に更新（非同期で実行）
+    console.log('📡 RSSフィードを更新中...');
+    fetchAllRssFeeds().catch((err) => {
+      console.error('❌ RSSフィード更新エラー:', err);
+    });
+
     const latestPosts = await getLatest50Posts();
     
-    // Add error handling for RSS fetch
-    const latestRss = await getLatest200RssFromFirestore().catch((err: unknown) => {
-      console.error('RSS取得エラー:', err);
-      return { items: [] };
-    });
+    // Add error handling for RSS fetch - get from both collections
+    const [rss1, rss2] = await Promise.all([
+      getLatest200RssFromFirestore("rss_items").catch((err: unknown) => {
+        console.error('RSS1取得エラー:', err);
+        return { items: [] };
+      }),
+      getLatest200RssFromFirestore("rss_items_2").catch((err: unknown) => {
+        console.error('RSS2取得エラー:', err);
+        return { items: [] };
+      }),
+    ]);
+
+    // Merge RSS items from both collections
+    const latestRss = {
+      items: [...(rss1.items || []), ...(rss2.items || [])].sort((a, b) => 
+        (b.pubDate?.getTime?.() ?? 0) - (a.pubDate?.getTime?.() ?? 0)
+      ).slice(0, 200)
+    };
 
     // Convert posts to a compact CSV. Include all parameters except `id`.
     // - createdAt: ISO string
@@ -402,5 +326,4 @@ ${question}
   }
 }
 
-export { SeeNewData };
 export default TalkAi;

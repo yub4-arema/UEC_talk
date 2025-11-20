@@ -56,9 +56,9 @@ function validateRssUrl(rssUrl: string): void {
   }
 }
 
-async function getLastExecutionTime(): Promise<Date | null> {
+async function getLastExecutionTime(collectionName: string = "rss_items"): Promise<Date | null> {
   try {
-    const metadataRef = doc(db, "rss_metadata", "last_execution");
+    const metadataRef = doc(db, "rss_metadata", collectionName);
     const snap = await getDoc(metadataRef);
     if (snap.exists()) {
       const data = snap.data();
@@ -67,19 +67,19 @@ async function getLastExecutionTime(): Promise<Date | null> {
       }
     }
   } catch (error) {
-    console.warn("前回実行時刻の取得に失敗しました:", error);
+    console.warn(`${collectionName}: 前回実行時刻の取得に失敗しました:`, error);
   }
   return null;
 }
 
-async function saveExecutionTime(): Promise<void> {
+async function saveExecutionTime(collectionName: string = "rss_items"): Promise<void> {
   try {
-    const metadataRef = doc(db, "rss_metadata", "last_execution");
+    const metadataRef = doc(db, "rss_metadata", collectionName);
     await setDoc(metadataRef, {
       lastExecutionTime: Timestamp.now(),
     }, { merge: true });
   } catch (error) {
-    console.warn("実行時刻の保存に失敗しました:", error);
+    console.warn(`${collectionName}: 実行時刻の保存に失敗しました:`, error);
   }
 }
 
@@ -90,7 +90,10 @@ function shouldSaveItem(itemPubDate: Date, lastExecutionTime: Date | null): bool
   return itemPubDate.getTime() > lastExecutionTime.getTime();
 }
 
-export async function FetchAndSaveRssToFirestore(rssUrl: string): Promise<number> {
+export async function FetchAndSaveRssToFirestore(
+  rssUrl: string,
+  collectionName: string = "rss_items"
+): Promise<number> {
   validateRssUrl(rssUrl);
 
   try {
@@ -102,8 +105,8 @@ export async function FetchAndSaveRssToFirestore(rssUrl: string): Promise<number
     const feed = await parser.parseURL(rssUrl);
     const items = (feed.items || []).slice(0, 200);
 
-    // Get last execution time
-    const lastExecutionTime = await getLastExecutionTime();
+    // Get last execution time for this specific collection
+    const lastExecutionTime = await getLastExecutionTime(collectionName);
     const now = new Date();
     
     // Check if 10 minutes have passed since last execution
@@ -113,11 +116,11 @@ export async function FetchAndSaveRssToFirestore(rssUrl: string): Promise<number
 
     if (!shouldFetch) {
       const minutesPassed = Math.floor((now.getTime() - lastExecutionTime.getTime()) / 60000);
-      console.log(`前回実行から${minutesPassed}分経過しています。30分以上経過するまで待機します。`);
+      console.log(`${collectionName}: 前回実行から${minutesPassed}分経過しています。30分以上経過するまで待機します。`);
       return 0;
     }
 
-    const rssCollection = collection(db, "rss_items");
+    const rssCollection = collection(db, collectionName);
     let batch = writeBatch(db);
     let batchCount = 0;
     let totalSavedCount = 0;
@@ -205,13 +208,13 @@ export async function FetchAndSaveRssToFirestore(rssUrl: string): Promise<number
         await deleteBatch.commit();
       }
 
-      console.log(`${docsToDelete.length}件の古いRSSアイテムを削除しました`);
+      console.log(`${collectionName}: ${docsToDelete.length}件の古いRSSアイテムを削除しました`);
     }
 
-    // Save current execution time
-    await saveExecutionTime();
+    // Save current execution time for this specific collection
+    await saveExecutionTime(collectionName);
 
-    console.log(`${totalSavedCount}件のRSSアイテムをFirestoreに保存しました`);
+    console.log(`${collectionName}: ${totalSavedCount}件のRSSアイテムをFirestoreに保存しました`);
     return totalSavedCount;
   } catch (error) {
     console.error("RSSの取得または保存に失敗しました:", error);

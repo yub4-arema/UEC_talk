@@ -19,13 +19,16 @@ function isValidRssItem(data: any): data is RssItem {
 }
 
 
-export async function FetchAndSaveRssToFirestore(rssUrl: string): Promise<number> {
-  return fetchAndSaveRss(rssUrl);
+export async function FetchAndSaveRssToFirestore(
+  rssUrl: string,
+  collectionName: string = "rss_items"
+): Promise<number> {
+  return fetchAndSaveRss(rssUrl, collectionName);
 }
 
-export async function getLatest200RssFromFirestore(): Promise<Latest200RssResponse> {
+export async function getLatest200RssFromFirestore(collectionName: string = "rss_items"): Promise<Latest200RssResponse> {
   try {
-    const rssCollection = collection(db, "rss_items");
+    const rssCollection = collection(db, collectionName);
     
     // 公開日時の降順で最新200件を取得
     const q = query(
