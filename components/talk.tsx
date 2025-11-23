@@ -16,7 +16,8 @@ export default function Talk() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [talkLogs, setTalkLogs] = useState<Array<{question: string; answer: string}>>([]);
+ 
   const callRssApi = async () => {
     const rssUrl = process.env.NEXT_PUBLIC_RSS_URL;
     if (!rssUrl) {
@@ -56,7 +57,8 @@ export default function Talk() {
       // RSS更新APIを呼び出し（サーバー側で環境変数を処理）
       await callRssApi();
       
-      const res = await TalkAi(question);
+      const res = await TalkAi(question, talkLogs);
+      console.log("会話履歴は:", talkLogs);
       if (res.text) {
         setResponse(res.text);
         setQuestion("");
@@ -70,6 +72,7 @@ export default function Talk() {
       setResponse(`Googleが何かバグったようです: ${error instanceof Error ? error.message : 'えーっと...エラーです。'}`);
     } finally {
       setLoading(false);
+      setTalkLogs((prevLogs) => [...prevLogs, { question, answer: response }]);
     }
   };
 
@@ -78,7 +81,7 @@ return (
     <InputGroup>
       <InputGroupTextarea
         id="textarea-code-32"
-        placeholder={`質問を入力してください\n(直近の投稿やtwitterの直近のポスト200件を参考に回答します。\n質問のたびに記憶はリセットされます...)`}
+        placeholder={`質問を入力してください\n(直近の投稿やtwitterの直近のポストを参考に回答します。)`}
         className="min-h-[200px]"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
