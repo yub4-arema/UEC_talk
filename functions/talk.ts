@@ -200,7 +200,7 @@ const rss2 = await
     const jstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
     
     const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: "gemma-3-12b",
     contents: [
         {
           role: "user",
@@ -291,15 +291,6 @@ ${question}
           ]
         }
       ],
-    config: {
-      thinkingConfig: {
-        thinkingBudget: 1000,
-        // Turn off thinking:
-        // thinkingBudget: 0
-        // Turn on dynamic thinking:
-        // thinkingBudget: -1
-      },
-    },
   });
     
     const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
