@@ -82,6 +82,9 @@ interface TalkLog {
   /** AIからの回答 */
   answer: string;
   
+  /** 会話生成に使ったプロンプト全文 */
+  prompt?: string;
+
   /** 処理成功フラグ */
   success: boolean;
   

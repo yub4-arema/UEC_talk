@@ -4,7 +4,21 @@ import { db } from "../firebase";
 import { RssItem } from "../types";
 import { createHash } from "crypto";
 
-const BATCH_SIZE = 500;
+const parseEnvLimit = (value: string | undefined, fallback: number) => {
+  if (!value) return fallback;
+  const parsed = Number(value);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return Math.floor(parsed);
+  }
+  return fallback;
+};
+
+const RSS_MAX_ITEMS = parseEnvLimit(process.env.RSS_MAX_ITEMS, 200);
+const RSS_SAVE_LIMIT = parseEnvLimit(process.env.RSS_SAVE_LIMIT, 200);
+const RSS_BATCH_SIZE = parseEnvLimit(process.env.RSS_BATCH_SIZE, 500);
+const RSS_FETCH_INTERVAL_MINUTES = parseEnvLimit(process.env.RSS_FETCH_INTERVAL_MINUTES, 30);
+const RSS_REQUEST_TIMEOUT_MS = parseEnvLimit(process.env.RSS_REQUEST_TIMEOUT_MS, 10000);
+const RSS_REQUEST_MAX_REDIRECTS = parseEnvLimit(process.env.RSS_REQUEST_MAX_REDIRECTS, 5);
 
 type AllowedHostCheck = (hostname: string) => boolean;
 
@@ -42,7 +56,7 @@ function validateRssUrl(rssUrl: string): void {
   let url: URL;
   try {
     url = new URL(rssUrl);
-  } catch (error) {
+  } catch {
     throw new Error(`無効なURL形式です: ${rssUrl}`);
   }
 
@@ -98,25 +112,25 @@ export async function FetchAndSaveRssToFirestore(
 
   try {
     const parser = new Parser({
-      timeout: 10000,
-      maxRedirects: 5,
+      timeout: RSS_REQUEST_TIMEOUT_MS,
+      maxRedirects: RSS_REQUEST_MAX_REDIRECTS,
     });
 
     const feed = await parser.parseURL(rssUrl);
-    const items = (feed.items || []).slice(0, 200);
+    const items = (feed.items || []).slice(0, RSS_MAX_ITEMS);
 
     // Get last execution time for this specific collection
     const lastExecutionTime = await getLastExecutionTime(collectionName);
     const now = new Date();
     
     // Check if 10 minutes have passed since last execution
-    const tenMinutesInMs = 30 * 60 * 1000;
+    const intervalMs = RSS_FETCH_INTERVAL_MINUTES * 60 * 1000;
     const shouldFetch = lastExecutionTime === null || 
-                        (now.getTime() - lastExecutionTime.getTime()) >= tenMinutesInMs;
+              (now.getTime() - lastExecutionTime.getTime()) >= intervalMs;
 
     if (!shouldFetch) {
       const minutesPassed = Math.floor((now.getTime() - lastExecutionTime.getTime()) / 60000);
-      console.log(`${collectionName}: 前回実行から${minutesPassed}分経過しています。30分以上経過するまで待機します。`);
+      console.log(`${collectionName}: 前回実行から${minutesPassed}分経過しています。${RSS_FETCH_INTERVAL_MINUTES}分以上経過するまで待機します。`);
       return 0;
     }
 
@@ -124,10 +138,10 @@ export async function FetchAndSaveRssToFirestore(
     let batch = writeBatch(db);
     let batchCount = 0;
     let totalSavedCount = 0;
-    const MAX_SAVE_COUNT = 200;
+    const MAX_SAVE_COUNT = RSS_SAVE_LIMIT;
 
     for (const item of items) {
-      // Stop if we've already saved 200 items
+      // Stop if we've already saved the configured limit
       if (totalSavedCount >= MAX_SAVE_COUNT) {
         break;
       }
@@ -171,7 +185,7 @@ export async function FetchAndSaveRssToFirestore(
       batchCount++;
       totalSavedCount++;
 
-      if (batchCount >= BATCH_SIZE) {
+      if (batchCount >= RSS_BATCH_SIZE) {
         await batch.commit();
         batch = writeBatch(db);
         batchCount = 0;
@@ -197,7 +211,7 @@ export async function FetchAndSaveRssToFirestore(
         deleteBatch.delete(doc(rssCollection, docItem.id));
         deleteCount++;
 
-        if (deleteCount >= BATCH_SIZE) {
+        if (deleteCount >= RSS_BATCH_SIZE) {
           await deleteBatch.commit();
           deleteBatch = writeBatch(db);
           deleteCount = 0;

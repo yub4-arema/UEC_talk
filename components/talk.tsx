@@ -63,10 +63,7 @@ export default function Talk() {
         setResponse(res.text);
         setQuestion("");
       } else if (res.error) {
-        // Display the error reason from the server so 'Talk' can show it.
-        // Keep a short friendly message but include the underlying reason for debugging.
-        const stack = (res as any).stack;
-        setResponse(`${res.error}${stack ? `\n\n詳細スタック:\n${stack}` : ''}`);
+        setResponse(res.error);
       }
     } catch (error) {
       setResponse(`Googleが何かバグったようです: ${error instanceof Error ? error.message : 'えーっと...エラーです。'}`);

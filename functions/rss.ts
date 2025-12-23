@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import {
   FetchAndSaveRssToFirestore as fetchAndSaveRss,
@@ -8,16 +8,18 @@ import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/
 import { db } from "./firebase";
 import { RssItem, Latest200RssResponse } from "./types";
 
-/**
- * RSSアイテムの型ガード関数
- */
-function isValidRssItem(data: any): data is RssItem {
-  return (
-    typeof data.title === 'string' &&
-    (data.pubDate instanceof Timestamp || data.pubDate instanceof Date || typeof data.pubDate === 'string')
-  );
-}
 
+
+const parseLimit = (value: string | undefined, fallback: number) => {
+  if (!value) return fallback;
+  const parsed = Number(value);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return Math.floor(parsed);
+  }
+  return fallback;
+};
+
+const DEFAULT_RSS_LIMIT = parseLimit(process.env.RSS_LATEST_LIMIT, 200);
 
 export async function FetchAndSaveRssToFirestore(
   rssUrl: string,
@@ -26,15 +28,17 @@ export async function FetchAndSaveRssToFirestore(
   return fetchAndSaveRss(rssUrl, collectionName);
 }
 
-export async function getLatest200RssFromFirestore(collectionName: string = "rss_items"): Promise<Latest200RssResponse> {
+export async function getLatest200RssFromFirestore(
+  collectionName: string = "rss_items",
+  rowLimit?: number
+): Promise<Latest200RssResponse> {
   try {
     const rssCollection = collection(db, collectionName);
     
-    // 公開日時の降順で最新200件を取得
     const q = query(
-      rssCollection, 
-      orderBy("pubDate", "desc"), 
-      limit(200)
+      rssCollection,
+      orderBy("pubDate", "desc"),
+      limit(rowLimit && rowLimit > 0 ? rowLimit : DEFAULT_RSS_LIMIT)
     );
     
     const querySnapshot = await getDocs(q);
@@ -43,13 +47,8 @@ export async function getLatest200RssFromFirestore(collectionName: string = "rss
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       
-      // 型ガードを使用してデータを検証
-      if (!isValidRssItem(data)) {
-        console.warn(`無効なRSSアイテム: ${doc.id}`);
-        return;
-      }
+     
       
-      // FirestoreのTimestampをDateに変換
       items.push({
         ...data,
         pubDate: data.pubDate instanceof Timestamp 
