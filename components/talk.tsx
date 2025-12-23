@@ -63,10 +63,7 @@ export default function Talk() {
         setResponse(res.text);
         setQuestion("");
       } else if (res.error) {
-        // Display the error reason from the server so 'Talk' can show it.
-        // Keep a short friendly message but include the underlying reason for debugging.
-        const stack = (res as any).stack;
-        setResponse(`${res.error}${stack ? `\n\n詳細スタック:\n${stack}` : ''}`);
+        setResponse(res.error);
       }
     } catch (error) {
       setResponse(`Googleが何かバグったようです: ${error instanceof Error ? error.message : 'えーっと...エラーです。'}`);
@@ -109,10 +106,18 @@ return (
       </InputGroupAddon>
     </InputGroup>
     {loading ? (
-      <Textarea placeholder="読み込み中..." value="回答中です。お茶でも飲みながらまったりお待ちください。"readOnly />
+      <Textarea placeholder="読み込み中..." value="回答中です。お茶でも飲みながらまったりお待ちください。" className="min-h-[200px]" readOnly />
     ) : (
-      <Textarea placeholder="まずは質問" value={response} readOnly />
+      <Textarea placeholder="まずは質問" value={response} className="min-h-[200px]" readOnly />
     )}
+    {talkLogs.length > 0 && (<div className="space-y-4">
+      {talkLogs.map((log, index) => (
+        <div key={index} className="border rounded p-2 space-y-2">
+           <Textarea placeholder="質問はここ" id="message" value={log.question} className="min-h-[120px]" readOnly />
+           <Textarea placeholder="回答はここ" id="message" value={log.answer} className="min-h-[120px]" readOnly />
+        </div>
+      ))}
+    </div>)}
   </div>
 
 );

@@ -2,8 +2,6 @@
 import { useState } from "react"
 import {
   Field,
-  FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
   FieldLegend,
@@ -17,18 +15,17 @@ import { Combobox, type ComboboxOption } from "@/components/ui/conmbobox"
 import type { PostCategory } from "@/functions/types"
 import { makePost } from "@/functions/posts"
 
-const Post = ({ ChangePosting }: { ChangePosting: Function }) => {
+type PostProps = {
+  ChangePosting: () => void;
+}
+
+const Post = ({ ChangePosting }: PostProps) => {
   const [content, setContent] = useState("")
   const [authorName, setAuthorName] = useState("")
   const [category, setCategory] = useState<PostCategory>("授業")
   const [targetYear, setTargetYear] = useState<number | null>(null)
   const [targetMajor, setTargetMajor] = useState<"I類" | "II類" | "III類" | null>(null)
   const [targetClass, setTargetClass] = useState<string>("")
-
-  const categoryOptions: ComboboxOption[] = [
-    { value: "授業", label: "授業" },
-    { value: "その他", label: "その他" },
-  ]
 
   const yearOptions: ComboboxOption[] = [
     { value: "", label: "指定なし" },
@@ -159,13 +156,10 @@ const Post = ({ ChangePosting }: { ChangePosting: Function }) => {
             </div>
           )}
 
-          <Button onClick={
-            () => {
-              handleSubmit();
-              
-              ChangePosting();
-            }
-          }>投稿する</Button>
+          <Button onClick={() => {
+            handleSubmit();
+            ChangePosting();
+          }}>投稿する</Button>
         </FieldGroup>
       </FieldSet>
     </>

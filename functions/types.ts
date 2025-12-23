@@ -82,6 +82,25 @@ interface TalkLog {
   /** AIからの回答 */
   answer: string;
   
+  /** 会話生成に使ったプロンプト全文 */
+  prompt?: string;
+
+  /** 利用したモデル名（例: groq/compound-mini） */
+  model?: string;
+
+  /** レスポンスID */
+  requestId?: string;
+
+  /** API側のトークン/時間情報 */
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+    promptTime?: number;
+    completionTime?: number;
+    totalTime?: number;
+  };
+
   /** 処理成功フラグ */
   success: boolean;
   
