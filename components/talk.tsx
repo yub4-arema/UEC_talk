@@ -111,12 +111,14 @@ return (
       <Textarea placeholder="まずは質問" value={response} className="min-h-[200px]" readOnly />
     )}
     {talkLogs.length > 0 && (<div className="space-y-4">
-      {talkLogs.map((log, index) => (
-        <div key={index} className="border rounded p-2 space-y-2">
-           <Textarea placeholder="質問はここ" id="message" value={log.question} className="min-h-[120px]" readOnly />
+      {[...talkLogs].reverse().map((log, index) => (
+        index===1 ? 
+        <Textarea placeholder="質問はここ" id="message" value={log.question} className="min-h-[120px]" readOnly /> : (
+        <div key={index} >
+           <Textarea placeholder="質問はここ" id="message" value={log.question} className="min-h-[120px] mb-4" readOnly />
            <Textarea placeholder="回答はここ" id="message" value={log.answer} className="min-h-[120px]" readOnly />
         </div>
-      ))}
+      )))}
     </div>)}
   </div>
 
