@@ -5,10 +5,10 @@ const convertToISOString = (date: unknown): string => {
     if (!date) return "";
     if (typeof date === "string") return date;
     if (date instanceof Date) return date.toISOString();
-    if (date && typeof date === "object" && "toDate" in date && typeof (date as { toDate?: unknown }).toDate === "function") {
+    if (typeof date === "object" && "toDate" in date && typeof (date as { toDate?: unknown }).toDate === "function") {
       return (date as { toDate: () => Date }).toDate().toISOString();
     }
-    if (date && typeof date === "object" && "seconds" in date) {
+    if (typeof date === "object" && "seconds" in date) {
       return new Date((date as { seconds: number }).seconds * 1000).toISOString();
     }
     const parsed = new Date(String(date));
