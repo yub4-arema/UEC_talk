@@ -38,7 +38,7 @@ const TalkAi = async (question: string, talkLogs: Array<{ question: string; answ
     console.log("🔄 Groq Chat APIに接続中...");
 
     const completion = await groq.chat.completions.create({
-      model: "groq/compound-mini",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       messages: [
         {
           role: "user",
@@ -48,11 +48,24 @@ const TalkAi = async (question: string, talkLogs: Array<{ question: string; answ
     });
 
     const text = completion.choices?.[0]?.message?.content ?? "";
+    const normalizedUsage = completion.usage
+      ? {
+          promptTokens: completion.usage.prompt_tokens,
+          completionTokens: completion.usage.completion_tokens,
+          totalTokens: completion.usage.total_tokens,
+          promptTime: completion.usage.prompt_time,
+          completionTime: completion.usage.completion_time,
+          totalTime: completion.usage.total_time,
+        }
+      : undefined;
 
     const successLog: TalkLog = {
       question,
       answer: text,
       prompt,
+      model: completion.model,
+      requestId: completion.id,
+      usage: normalizedUsage,
       success: true,
       createdAt: new Date(),
     };

@@ -110,6 +110,14 @@ return (
     ) : (
       <Textarea placeholder="まずは質問" value={response} readOnly />
     )}
+    {talkLogs.length > 0 && (<div className="space-y-4">
+      {talkLogs.map((log, index) => (
+        <div key={index} className="border rounded p-2">
+           <Textarea placeholder="質問はここ" value={log.question} readOnly />
+           <Textarea placeholder="回答はここ" value={log.answer} readOnly />
+        </div>
+      ))}
+    </div>)}
   </div>
 
 );
