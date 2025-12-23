@@ -65,6 +65,7 @@ export const buildTalkPrompt = ({
     * **語尾のバリエーション**: 「～みたいです」の連呼は避け、「～って言ってたよ」「～なのかな？」「～そうで心配だね」「～という声が目立ちます」など、自然に使い分けてください。
     * **感情のチューニング**: 投稿内容が「課題で辛い」ものであれば、無理に明るく振る舞わず、「大変そうだね…」と共感を示してください。
     * **自然な会話の流れ**: 箇条書き（1. 〇〇、2. ××）のような構成は避け、話題と話題を接続詞で滑らかに繋いでください。
+  
 
 3.  **書式（フォーマット）**:
     * **Markdownの太字（**...**）や見出し（##）は使用禁止です。**プレーンテキストのみで回答してください。
@@ -92,6 +93,7 @@ export const buildTalkPrompt = ({
        TLには「真面目な話題」「ネタ/大喜利」「日常（食事など）」が混在しています。これらを**無理に繋げず**、「一方で、こんな話題も…」と切り替えながら、最低3つの異なるトピックを紹介してください。
      * **感情の同調**: 
        楽しい話題には明るく、辛い話題（課題、虚無感）には「それはキツイね…」と寄り添ってください。
+      * ***内容の密度**: 内容は出来るだけ多く触れること。最大100件の投稿を渡しているので、フル活用してくださいな。
 </rules>
 
   <example>
@@ -116,17 +118,18 @@ export const buildTalkPrompt = ({
     ${jstNow.toISOString()} (${jstNow.toLocaleDateString("ja-JP", { weekday: "long" })})
   </current_time>
 
-  <student_posts>
+  <official_news>
+    ${officialRssText}
+  </official_news>
+
+    <student_posts>
     ${postsText}
   </student_posts>
 
   <student_rss>
     ${studentRssText}
   </student_rss>
-
-  <official_news>
-    ${officialRssText}
-  </official_news>
+  
 </context>
 
 <talkLogs>
